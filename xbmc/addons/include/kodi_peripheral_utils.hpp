@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2014 Team XBMC
+ *      Copyright (C) 2014-2015 Team XBMC
  *      http://xbmc.org
  *
  *  This Program is free software; you can redistribute it and/or modify
@@ -231,11 +231,12 @@ namespace ADDON
    * Wrapper class providing additional joystick information not provided by
    * ADDON::Peripheral.
    */
-  class Joystick
+  class Joystick : public Peripheral
   {
   public:
     Joystick(const std::string& provider = "", const std::string& strName = "")
-    : m_provider(provider),
+    : Peripheral(PERIPHERAL_TYPE_JOYSTICK, strName),
+      m_provider(provider),
     m_requestedPort(NO_PORT_REQUESTED),
     m_buttonCount(0),
     m_hatCount(0),
@@ -249,7 +250,8 @@ namespace ADDON
     }
 
     Joystick(const JOYSTICK_INFO& info)
-    : m_provider(info.provider ? info.provider : ""),
+    : Peripheral(info.peripheral),
+      m_provider(info.provider ? info.provider : ""),
     m_requestedPort(info.requested_port),
     m_buttonCount(info.button_count),
     m_hatCount(info.hat_count),
@@ -257,10 +259,14 @@ namespace ADDON
     {
     }
 
+    virtual ~Joystick(void) { }
+
     Joystick& operator=(const Joystick& rhs)
     {
       if (this != &rhs)
       {
+        Peripheral::operator=(rhs);
+
         m_provider      = rhs.m_provider;
         m_requestedPort = rhs.m_requestedPort;
         m_buttonCount   = rhs.m_buttonCount;
@@ -284,6 +290,8 @@ namespace ADDON
 
     void ToStruct(JOYSTICK_INFO& info) const
     {
+      Peripheral::ToStruct(info.peripheral);
+
       info.provider       = new char[m_provider.size() + 1];
       info.requested_port = m_requestedPort;
       info.button_count   = m_buttonCount;
@@ -295,6 +303,8 @@ namespace ADDON
 
     static void FreeStruct(JOYSTICK_INFO& info)
     {
+      Peripheral::FreeStruct(info.peripheral);
+
       PERIPHERAL_SAFE_DELETE_ARRAY(info.provider);
     }
 
@@ -319,17 +329,16 @@ namespace ADDON
   {
   public:
     JoystickFeature(void)
-    : m_id(0)
     {
     }
 
-    JoystickFeature(unsigned int id)
-    : m_id(id)
+    JoystickFeature(const std::string& name)
+    : m_name(name)
     {
     }
 
     JoystickFeature(const JOYSTICK_FEATURE& feature)
-    : m_id(feature.id)
+    : m_name(feature.feature_name ? feature.feature_name : "")
     {
     }
 
@@ -338,23 +347,25 @@ namespace ADDON
     virtual JoystickFeature* Clone(void) const { return new JoystickFeature(*this); }
 
     virtual JOYSTICK_DRIVER_TYPE Type(void) const { return JOYSTICK_DRIVER_TYPE_UNKNOWN; }
-    unsigned int                 ID(void) const   { return m_id; }
+    const std::string&           Name(void) const { return m_name; }
 
-    void SetID(unsigned int id) { m_id = id; }
+    void SetName(const std::string& name) { m_name = name; }
 
     virtual void ToStruct(JOYSTICK_FEATURE& feature) const
     {
-      feature.id          = m_id;
-      feature.driver_type = Type();
+      feature.feature_name = new char[m_name.length() + 1];
+      feature.driver_type  = Type();
+
+      std::strcpy(feature.feature_name, m_name.c_str());
     }
 
     static void FreeStruct(JOYSTICK_FEATURE& feature)
     {
-      (void)feature;
+      PERIPHERAL_SAFE_DELETE_ARRAY(feature.feature_name);
     }
 
   private:
-    unsigned int m_id;
+    std::string  m_name;
   };
 
   typedef PeripheralVector<JoystickFeature, JOYSTICK_FEATURE> JoystickFeatures;
@@ -372,8 +383,8 @@ namespace ADDON
     {
     }
 
-    DriverButton(unsigned int id, int index) :
-      JoystickFeature(id),
+    DriverButton(const std::string& name, int index) :
+      JoystickFeature(name),
       m_index(index)
     {
     }
@@ -417,8 +428,8 @@ namespace ADDON
     {
     }
 
-    DriverHat(unsigned int id, int index, JOYSTICK_DRIVER_HAT_DIRECTION direction) :
-      JoystickFeature(id),
+    DriverHat(const std::string& name, int index, JOYSTICK_DRIVER_HAT_DIRECTION direction) :
+      JoystickFeature(name),
       m_index(index),
       m_direction(direction)
     {
@@ -468,8 +479,8 @@ namespace ADDON
     {
     }
 
-    DriverSemiAxis(unsigned int id, int index, JOYSTICK_DRIVER_SEMIAXIS_DIRECTION direction) :
-      JoystickFeature(id),
+    DriverSemiAxis(const std::string& name, int index, JOYSTICK_DRIVER_SEMIAXIS_DIRECTION direction) :
+      JoystickFeature(name),
       m_index(index),
       m_direction(direction)
     {
@@ -521,8 +532,8 @@ namespace ADDON
     {
     }
 
-    DriverAnalogStick(unsigned int id, int xIndex, bool xInverted, int yIndex, bool yInverted) :
-      JoystickFeature(id),
+    DriverAnalogStick(const std::string& name, int xIndex, bool xInverted, int yIndex, bool yInverted) :
+      JoystickFeature(name),
       m_xIndex(xIndex),
       m_xInverted(xInverted),
       m_yIndex(yIndex),
@@ -589,8 +600,8 @@ namespace ADDON
     {
     }
 
-    DriverAccelerometer(unsigned int id, int xIndex, bool xInverted, int yIndex, bool yInverted, int zIndex, bool zInverted) :
-      JoystickFeature(id),
+    DriverAccelerometer(const std::string& name, int xIndex, bool xInverted, int yIndex, bool yInverted, int zIndex, bool zInverted) :
+      JoystickFeature(name),
       m_xIndex(xIndex),
       m_xInverted(xInverted),
       m_yIndex(yIndex),
@@ -662,21 +673,11 @@ namespace ADDON
     {
       switch (feature.driver_type)
       {
-      case JOYSTICK_DRIVER_TYPE_BUTTON:
-        return new DriverButton(feature);
-        break;
-      case JOYSTICK_DRIVER_TYPE_HAT_DIRECTION:
-        return new DriverHat(feature);
-        break;
-      case JOYSTICK_DRIVER_TYPE_SEMIAXIS:
-        return new DriverSemiAxis(feature);
-        break;
-      case JOYSTICK_DRIVER_TYPE_ANALOG_STICK:
-        return new DriverAnalogStick(feature);
-        break;
-      case JOYSTICK_DRIVER_TYPE_ACCELEROMETER:
-        return new DriverAccelerometer(feature);
-        break;
+      case JOYSTICK_DRIVER_TYPE_BUTTON:        return new DriverButton(feature);
+      case JOYSTICK_DRIVER_TYPE_HAT_DIRECTION: return new DriverHat(feature);
+      case JOYSTICK_DRIVER_TYPE_SEMIAXIS:      return new DriverSemiAxis(feature);
+      case JOYSTICK_DRIVER_TYPE_ANALOG_STICK:  return new DriverAnalogStick(feature);
+      case JOYSTICK_DRIVER_TYPE_ACCELEROMETER: return new DriverAccelerometer(feature);
       default:
         break;
       }

@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2012-2014 Team XBMC
+ *      Copyright (C) 2012-2015 Team XBMC
  *      http://xbmc.org
  *
  *  This Program is free software; you can redistribute it and/or modify
@@ -60,6 +60,7 @@
  */
 
 #include "GameClientProperties.h"
+#include "GameController.h"
 #include "addons/Addon.h"
 #include "addons/AddonDll.h"
 #include "addons/DllGameClient.h"
@@ -82,22 +83,25 @@ namespace GAME
 
 class CGameClient;
 
-class CDeviceInput : public IJoystickInputHandler
+class CControllerInput : public IJoystickInputHandler
 {
 public:
-  CDeviceInput(CGameClient* addon, int port, const std::string& strDeviceId);
+  CControllerInput(CGameClient* addon, int port, const GameControllerPtr& controller);
 
   // Implementation of IJoystickInputHandler
-  virtual std::string DeviceID(void) const { return m_strDeviceId; }
-  virtual bool OnButtonPress(unsigned int featureIndex, bool bPressed);
-  virtual bool OnButtonMotion(unsigned int featureIndex, float magnitude);
-  virtual bool OnAnalogStickMotion(unsigned int featureIndex, float x, float y);
-  virtual bool OnAccelerometerMotion(unsigned int featureIndex, float x, float y, float z);
+  virtual std::string ControllerID(void) const;
+  virtual InputType GetInputType(const std::string& feature) const;
+  virtual bool OnButtonPress(const std::string& feature, bool bPressed);
+  virtual bool OnButtonMotion(const std::string& feature, float magnitude);
+  virtual bool OnAnalogStickMotion(const std::string& feature, float x, float y);
+  virtual bool OnAccelerometerMotion(const std::string& feature, float x, float y, float z);
+
+  const GameControllerPtr& Controller(void) const { return m_controller; }
 
 private:
-  CGameClient* const m_addon;
-  const int          m_port;
-  std::string        m_strDeviceId; // TODO
+  CGameClient* const      m_addon;
+  const int               m_port;
+  const GameControllerPtr m_controller;
 };
 
 class CGameClient : public ADDON::CAddonDll<DllGameClient, GameClient, game_client_properties>
@@ -153,15 +157,14 @@ public:
   size_t GetAvailableFrames() const { return m_bRewindEnabled ? m_serialState.GetFramesAvailable() : 0; }
   size_t GetMaxFrames() const { return m_bRewindEnabled ? m_serialState.GetMaxFrames() : 0; }
 
-  bool OpenPort(unsigned int port, const std::string& strDeviceId);
+  bool OpenPort(unsigned int port);
   void ClosePort(unsigned int port);
-  void ClearPorts(void);
-  void UpdatePort(unsigned int port, bool bConnected);
+  void UpdatePort(unsigned int port, const GameControllerPtr& controller);
 
-  bool OnButtonPress(int port, unsigned int featureIndex, bool bPressed);
-  bool OnButtonMotion(int port, unsigned int featureIndex, float magnitude);
-  bool OnAnalogStickMotion(int port, unsigned int featureIndex, float x, float y);
-  bool OnAccelerometerMotion(int port, unsigned int featureIndex, float x, float y, float z);
+  bool OnButtonPress(int port, const std::string& feature, bool bPressed);
+  bool OnButtonMotion(int port, const std::string& feature, float magnitude);
+  bool OnAnalogStickMotion(int port, const std::string& feature, float x, float y);
+  bool OnAccelerometerMotion(int port, const std::string& feature, float x, float y, float z);
 
 private:
   // Called by the constructors
@@ -170,6 +173,9 @@ private:
   // Private Game API functions
   bool LoadGameInfo();
   bool InitSerialization();
+
+  void ClearPorts(void);
+  GameControllerVector GetControllers(void) const;
 
   // Helper functions
   static std::vector<std::string> ParseExtensions(const std::string& strExtensionList);
@@ -204,7 +210,7 @@ private:
   CSerialState          m_serialState;
 
   // Input
-  std::vector<CDeviceInput*>  m_devices; // port -> controller
+  std::vector<CControllerInput*>  m_controllers;
 
   CCriticalSection      m_critSection;
 };

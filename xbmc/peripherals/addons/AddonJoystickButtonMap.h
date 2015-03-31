@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2014 Team XBMC
+ *      Copyright (C) 2014-2015 Team XBMC
  *      http://xbmc.org
  *
  *  This Program is free software; you can redistribute it and/or modify
@@ -19,43 +19,40 @@
  */
 #pragma once
 
+#include "AddonJoystickButtonMapRO.h"
+#include "AddonJoystickButtonMapWO.h"
 #include "input/joysticks/IJoystickButtonMap.h"
 #include "peripherals/addons/PeripheralAddon.h"
-
-#include <map>
 
 namespace PERIPHERALS
 {
   class CAddonJoystickButtonMap : public IJoystickButtonMap
   {
   public:
-    CAddonJoystickButtonMap(CPeripheral* device, const std::string& strDeviceId);
+    CAddonJoystickButtonMap(CPeripheral* device, const std::string& strControllerId);
 
-    virtual ~CAddonJoystickButtonMap(void) { }
+    virtual ~CAddonJoystickButtonMap(void);
 
     // Implementation of IJoystickButtonMap
+    virtual std::string ControllerID(void) const { return m_buttonMapRO.ControllerID(); }
     virtual bool Load(void);
-    virtual bool GetFeature(const CJoystickDriverPrimitive& primitive, unsigned int& featureIndex);
-    virtual bool GetButton(unsigned int featureIndex, CJoystickDriverPrimitive& button);
-    virtual bool GetAnalogStick(unsigned int featureIndex, int& horizIndex, bool& horizInverted,
-                                                           int& vertIndex,  bool& vertInverted);
-    virtual bool GetAccelerometer(unsigned int featureIndex, int& xIndex, bool& xInverted,
-                                                             int& yIndex, bool& yInverted,
-                                                             int& zIndex, bool& zInverted);
+    virtual bool GetFeature(const CJoystickDriverPrimitive& primitive, std::string& feature);
+    virtual bool GetButton(const std::string& feature, CJoystickDriverPrimitive& button);
+    virtual bool MapButton(const std::string& feature, const CJoystickDriverPrimitive& primitive);
+    virtual bool GetAnalogStick(const std::string& feature, int& horizIndex, bool& horizInverted,
+                                                            int& vertIndex,  bool& vertInverted);
+    virtual bool MapAnalogStick(const std::string& feature, int horizIndex, bool horizInverted,
+                                                            int vertIndex,  bool vertInverted);
+    virtual bool GetAccelerometer(const std::string& feature, int& xIndex, bool& xInverted,
+                                                              int& yIndex, bool& yInverted,
+                                                              int& zIndex, bool& zInverted);
+    virtual bool MapAccelerometer(const std::string& feature, int xIndex, bool xInverted,
+                                                              int yIndex, bool yInverted,
+                                                              int zIndex, bool zInverted);
 
   private:
-    typedef std::map<CJoystickDriverPrimitive, unsigned int> DriverMap;
-
-    // Utility functions
-    static PeripheralAddonPtr GetAddon(const CPeripheral* device);
-    static HatDirection       ToHatDirection(JOYSTICK_DRIVER_HAT_DIRECTION driverDirection);
-    static SemiAxisDirection  ToSemiAxisDirection(JOYSTICK_DRIVER_SEMIAXIS_DIRECTION dir);
-    static DriverMap          GetDriverMap(const JoystickFeatureVector& features);
-
-    CPeripheral* const       m_device;
-    const std::string        m_strDeviceId;
-    PeripheralAddonPtr       m_addon;
-    JoystickFeatureVector    m_features;
-    DriverMap                m_driverMap;
+    PeripheralAddonPtr        m_addon;
+    CAddonJoystickButtonMapRO m_buttonMapRO;
+    CAddonJoystickButtonMapWO m_buttonMapWO;
   };
 }

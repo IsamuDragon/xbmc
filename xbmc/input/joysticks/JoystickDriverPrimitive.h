@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2014 Team XBMC
+ *      Copyright (C) 2014-2015 Team XBMC
  *      http://xbmc.org
  *
  *  This Program is free software; you can redistribute it and/or modify
@@ -32,6 +32,8 @@ enum DriverPrimitiveType
 };
 
 /*!
+ * \ingroup joysticks
+ *
  * \brief Basic driver element associated with input events
  *
  * A driver primitive can be a button, one of the four direction arrows on a

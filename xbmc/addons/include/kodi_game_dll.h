@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2014 Team XBMC
+ *      Copyright (C) 2014-2015 Team XBMC
  *      http://xbmc.org
  *
  *  This Program is free software; you can redistribute it and/or modify
@@ -64,12 +64,13 @@ GAME_ERROR Reset(void);
 /*!
  * Set the status of an open port.
  */
-void UpdatePort(unsigned int port, bool port_connected);
+void ControllerConnected(unsigned int port, bool connected, const struct game_controller* connected_controller);
 
 /*!
- * Called in response to an input event on an open port.
+ * Called in response to an input event on an open port. Return true if the
+ * event was handled by this add-on.
  */
-void InputEvent(unsigned int port, game_input_event* event);
+bool InputEvent(unsigned int port, const game_input_event* event);
 
 /*!
  * Gets information about system audio/video timings and geometry. Can be
@@ -279,7 +280,7 @@ void __declspec(dllexport) get_addon(struct GameClient* pClient)
   pClient->UnloadGame               = UnloadGame;
   pClient->Run                      = Run;
   pClient->Reset                    = Reset;
-  pClient->UpdatePort               = UpdatePort;
+  pClient->ControllerConnected      = ControllerConnected;
   pClient->InputEvent               = InputEvent;
   pClient->GetSystemAVInfo          = GetSystemAVInfo;
   pClient->SerializeSize            = SerializeSize;

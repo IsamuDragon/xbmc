@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2014 Team XBMC
+ *      Copyright (C) 2014-2015 Team XBMC
  *      http://xbmc.org
  *
  *  This Program is free software; you can redistribute it and/or modify
@@ -23,6 +23,7 @@
 
 /*!
  * \ingroup joysticks
+ *
  * \brief Interface defining methods to handle joystick events for raw driver
  *        elements (buttons, hats, axes)
  */
@@ -36,16 +37,30 @@ public:
    *
    * \param buttonIndex The index of the button as reported by the driver
    * \param bPressed    true for press motion, false for release motion
+   *
+   * \return True if a press was handled, false otherwise
+   *
+   * When a button press is handled (returns true), other handlers registered
+   * with the joystick may be skipped. For this reason, this should always
+   * return false when a button is released so that all handlers may observe
+   * the release.
    */
-  virtual void OnButtonMotion(unsigned int buttonIndex, bool bPressed) = 0;
+  virtual bool OnButtonMotion(unsigned int buttonIndex, bool bPressed) = 0;
 
   /*!
    * \brief Handle hat motion
    *
    * \param hatIndex     The index of the hat as reported by the driver
    * \param direction    The direction the hat is now being pressed
+   *
+   * \return True if the new direction was handled, false otherwise
+   *
+   * When a hat press is handled (returns true), other handlers registered with
+   * the joystick may be skipped. For this reason, this should always return
+   * false when the hat is centered so that all handlers may observe the
+   * deactivation.
    */
-  virtual void OnHatMotion(unsigned int hatIndex, HatDirection direction) = 0;
+  virtual bool OnHatMotion(unsigned int hatIndex, HatDirection direction) = 0;
 
   /*!
    * \brief Handle axis motion
@@ -55,8 +70,15 @@ public:
    *
    * \param axisIndex   The index of the axis as reported by the driver
    * \param position    The position of the axis in the closed interval [-1.0, 1.0]
+   *
+   * \return True if the motion was handled, false otherwise
+   *
+   * When axis motion is handled (returns true), other handlers registered with
+   * the joystick may be skipped. For this reason, this should always return 
+   * false when the axis is centered so that all handlers may observe its return
+   * to the center value.
    */
-  virtual void OnAxisMotion(unsigned int axisIndex, float position) = 0;
+  virtual bool OnAxisMotion(unsigned int axisIndex, float position) = 0;
 
   /*!
    * \brief Handle buffered axis positions for features that require multiple axes
@@ -64,6 +86,10 @@ public:
    * This allows the driver to report motion for individual axes without
    * knowledge of how the axes map to physical features. ProcessAxisMotions() is
    * called at the end of the frame when all axis motions have been reported.
+   *
+   * Analog features in motion emit events every frame, so this can also be used
+   * to dispatcg events every frame when a pressed digital button is emulating
+   * an analog features.
    */
   virtual void ProcessAxisMotions(void) = 0;
 };

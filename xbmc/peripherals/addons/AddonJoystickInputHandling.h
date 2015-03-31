@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2014 Team XBMC
+ *      Copyright (C) 2014-2015 Team XBMC
  *      http://xbmc.org
  *
  *  This Program is free software; you can redistribute it and/or modify
@@ -28,17 +28,17 @@ namespace PERIPHERALS
 {
   class CPeripheral;
 
-  class CAddonJoystickDriverHandler : public IJoystickDriverHandler
+  class CAddonJoystickInputHandling : public IJoystickDriverHandler
   {
   public:
-    CAddonJoystickDriverHandler(CPeripheral* peripheral, IJoystickInputHandler* handler);
+    CAddonJoystickInputHandling(CPeripheral* peripheral, IJoystickInputHandler* handler);
 
-    virtual ~CAddonJoystickDriverHandler(void);
+    virtual ~CAddonJoystickInputHandling(void);
 
     // implementation of IJoystickDriverHandler
-    virtual void OnButtonMotion(unsigned int buttonIndex, bool bPressed);
-    virtual void OnHatMotion(unsigned int hatIndex, HatDirection direction);
-    virtual void OnAxisMotion(unsigned int axisIndex, float position);
+    virtual bool OnButtonMotion(unsigned int buttonIndex, bool bPressed);
+    virtual bool OnHatMotion(unsigned int hatIndex, HatDirection direction);
+    virtual bool OnAxisMotion(unsigned int axisIndex, float position);
     virtual void ProcessAxisMotions(void);
 
   private:

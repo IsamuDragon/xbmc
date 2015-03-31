@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2014 Team XBMC
+ *      Copyright (C) 2015 Team XBMC
  *      http://xbmc.org
  *
  *  This Program is free software; you can redistribute it and/or modify
@@ -19,23 +19,38 @@
  */
 #pragma once
 
-#include "GUIImage.h"
+#include "GameControllerLayout.h"
+#include "addons/Addon.h"
 #include "games/GameTypes.h"
-#include "threads/CriticalSection.h"
 
-class CGUIGamePeripheral : public CGUIImage
+#include <string>
+
+namespace GAME
+{
+
+class CGameController : public ADDON::CAddon
 {
 public:
-  CGUIGamePeripheral(int parentID, int controlID, float posX, float posY, float width, float height);
-  CGUIGamePeripheral(const CGUIGamePeripheral &from);
-  virtual ~CGUIGamePeripheral(void) { }
-  virtual CGUIGamePeripheral *Clone() const { return new CGUIGamePeripheral(*this); }
+  CGameController(const ADDON::AddonProps &addonprops);
+  CGameController(const cp_extension_t *ext);
+  virtual ~CGameController(void) { }
 
-  virtual void Render();
+  static const GameControllerPtr EmptyPtr;
 
-  void ActivatePeripheral(const GAME::GamePeripheralPtr& peripheral);
+  // implementation of CAddon
+  virtual ADDON::AddonPtr GetRunningInstance(void) const;
+
+  std::string Label(void);
+  std::string ImagePath(void) const;
+  std::string OverlayPath(void) const;
+
+  bool LoadLayout(void);
+
+  const CGameControllerLayout& Layout(void) const { return m_layout; }
 
 private:
-  GAME::GamePeripheralPtr m_currentPeripheral;
-  CCriticalSection        m_mutex;
+  CGameControllerLayout m_layout;
+  bool                  m_bLoaded;
 };
+
+}

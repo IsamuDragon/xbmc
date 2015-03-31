@@ -25,12 +25,40 @@
 namespace GAME
 {
 
-class CGamePeripheral;
-typedef std::shared_ptr<CGamePeripheral> GamePeripheralPtr;
-typedef std::vector<GamePeripheralPtr>   GamePeripheralVector;
+class CGameController;
+typedef std::shared_ptr<CGameController> GameControllerPtr;
+typedef std::vector<GameControllerPtr>   GameControllerVector;
 
 class CGameClient;
 typedef std::shared_ptr<CGameClient> GameClientPtr;
 typedef std::vector<GameClientPtr>   GameClientVector;
+
+/*!
+ * \brief Types of features used in the game peripheral abstraction
+ */
+enum FeatureType
+{
+  FEATURE_UNKNOWN,
+  FEATURE_BUTTON,
+  FEATURE_ANALOG_STICK,
+  FEATURE_ACCELEROMETER,
+  FEATURE_KEY,
+  FEATURE_RELATIVE_POINTER,
+  FEATURE_ABSOLUTE_POINTER,
+};
+
+enum ButtonType
+{
+  BUTTON_UNKNOWN,
+  BUTTON_DIGITAL,
+  BUTTON_ANALOG,
+};
+
+enum FeatureGeometryType
+{
+  GEOMETRY_NONE,
+  GEOMETRY_RECTANGLE,
+  GEOMETRY_CIRCLE,
+};
 
 }

@@ -20,6 +20,7 @@
  */
 
 #include "system.h"
+#include "addons/PeripheralAddon.h"
 #include "bus/PeripheralBus.h"
 #include "devices/Peripheral.h"
 #include "PortMapper.h"
@@ -34,6 +35,7 @@ class CSettingsCategory;
 class TiXmlElement;
 class CAction;
 class CKey;
+class IJoystickButtonMapper;
 
 namespace PERIPHERALS
 {
@@ -207,7 +209,12 @@ namespace PERIPHERALS
       return false;
 #endif
     }
-    
+
+    virtual PeripheralAddonPtr GetAddon(const CPeripheral* device);
+
+    void RegisterJoystickButtonMapper(IJoystickButtonMapper* mapper);
+    void UnregisterJoystickButtonMapper(IJoystickButtonMapper* mapper);
+
     virtual void OnSettingChanged(const CSetting *setting);
     virtual void OnSettingAction(const CSetting *setting);
 

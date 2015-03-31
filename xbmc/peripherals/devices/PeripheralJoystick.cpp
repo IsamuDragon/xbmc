@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2005-2013 Team XBMC
+ *      Copyright (C) 2014-2015 Team XBMC
  *      http://xbmc.org
  *
  *  This Program is free software; you can redistribute it and/or modify
@@ -21,6 +21,7 @@
 #include "PeripheralJoystick.h"
 #include "peripherals/Peripherals.h"
 #include "peripherals/bus/PeripheralBusAddon.h"
+#include "threads/SingleLock.h"
 #include "utils/log.h"
 
 #include <algorithm>
@@ -29,7 +30,10 @@ using namespace PERIPHERALS;
 
 CPeripheralJoystick::CPeripheralJoystick(const PeripheralScanResult& scanResult) :
   CPeripheral(scanResult),
-  m_requestedPort(JOYSTICK_PORT_UNKNOWN)
+  m_requestedPort(JOYSTICK_PORT_UNKNOWN),
+  m_buttonCount(0),
+  m_hatCount(0),
+  m_axisCount(0)
 {
   m_features.push_back(FEATURE_JOYSTICK);
 }
@@ -71,35 +75,59 @@ bool CPeripheralJoystick::InitialiseFeature(const PeripheralFeature feature)
 
 void CPeripheralJoystick::RegisterJoystickDriverHandler(IJoystickDriverHandler* handler)
 {
+  CSingleLock lock(m_handlerMutex);
+
   if (handler && std::find(m_driverHandlers.begin(), m_driverHandlers.end(), handler) == m_driverHandlers.end())
     m_driverHandlers.insert(m_driverHandlers.begin(), handler);
 }
 
 void CPeripheralJoystick::UnregisterJoystickDriverHandler(IJoystickDriverHandler* handler)
 {
+  CSingleLock lock(m_handlerMutex);
+
   m_driverHandlers.erase(std::remove(m_driverHandlers.begin(), m_driverHandlers.end(), handler), m_driverHandlers.end());
 }
 
-void CPeripheralJoystick::OnButtonMotion(unsigned int buttonIndex, bool bPressed)
+bool CPeripheralJoystick::OnButtonMotion(unsigned int buttonIndex, bool bPressed)
 {
+  CSingleLock lock(m_handlerMutex);
+
+  bool bHandled = false;
+
   for (std::vector<IJoystickDriverHandler*>::iterator it = m_driverHandlers.begin(); it != m_driverHandlers.end(); ++it)
-    (*it)->OnButtonMotion(buttonIndex, bPressed);
+    bHandled = bHandled || (*it)->OnButtonMotion(buttonIndex, bPressed);
+
+  return bHandled;
 }
 
-void CPeripheralJoystick::OnHatMotion(unsigned int hatIndex, HatDirection direction)
+bool CPeripheralJoystick::OnHatMotion(unsigned int hatIndex, HatDirection direction)
 {
+  CSingleLock lock(m_handlerMutex);
+
+  bool bHandled = false;
+
   for (std::vector<IJoystickDriverHandler*>::iterator it = m_driverHandlers.begin(); it != m_driverHandlers.end(); ++it)
-    (*it)->OnHatMotion(hatIndex, direction);
+    bHandled = bHandled || (*it)->OnHatMotion(hatIndex, direction);
+
+  return bHandled;
 }
 
-void CPeripheralJoystick::OnAxisMotion(unsigned int axisIndex, float position)
+bool CPeripheralJoystick::OnAxisMotion(unsigned int axisIndex, float position)
 {
+  CSingleLock lock(m_handlerMutex);
+
+  bool bHandled = false;
+
   for (std::vector<IJoystickDriverHandler*>::iterator it = m_driverHandlers.begin(); it != m_driverHandlers.end(); ++it)
-    (*it)->OnAxisMotion(axisIndex, position);
+    bHandled = bHandled || (*it)->OnAxisMotion(axisIndex, position);
+
+  return bHandled;
 }
 
 void CPeripheralJoystick::ProcessAxisMotions(void)
 {
+  CSingleLock lock(m_handlerMutex);
+
   for (std::vector<IJoystickDriverHandler*>::iterator it = m_driverHandlers.begin(); it != m_driverHandlers.end(); ++it)
     (*it)->ProcessAxisMotions();
 }

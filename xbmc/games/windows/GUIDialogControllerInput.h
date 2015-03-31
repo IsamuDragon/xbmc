@@ -1,7 +1,5 @@
-#pragma once
-
 /*
- *      Copyright (C) 2005-2013 Team XBMC
+ *      Copyright (C) 2015 Team XBMC
  *      http://xbmc.org
  *
  *  This Program is free software; you can redistribute it and/or modify
@@ -19,18 +17,19 @@
  *  <http://www.gnu.org/licenses/>.
  *
  */
+#pragma once
 
 #include "games/GameTypes.h"
+#include "games/windows/wizards/IGUIControllerWizard.h"
 #include "guilib/GUIDialog.h"
 
-#include <map>
 #include <string>
 
 class CGUIButtonControl;
 class CGUIFocusPlane;
-namespace GAME { class CGamePeripheral; }
 
-class CGUIDialogControllerInput : public CGUIDialog
+class CGUIDialogControllerInput : public CGUIDialog,
+                                  public GAME::IGUIControllerWizardCallbacks
 {
 public:
   CGUIDialogControllerInput(void);
@@ -38,31 +37,32 @@ public:
 
   // implementation of CGUIControl
   virtual bool OnMessage(CGUIMessage& message);
-  virtual bool OnAction(const CAction& action);
 
-  void DoModal(const GAME::GamePeripheralPtr& peripheral, CGUIFocusPlane* focusControl);
+  // implementation of IGUIControllerWizardCallbacks
+  virtual void Focus(unsigned int iFeature);
+  virtual void SetLabel(unsigned int iFeature, const std::string& strLabel);
+  virtual void ResetLabel(unsigned int iFeature);
+  virtual void End(void);
+
+  void DoModal(const GAME::GameControllerPtr& controller, CGUIFocusPlane* focusControl);
 
 protected:
   // implementation of CGUIWindow
   virtual void OnInitWindow(void);
   virtual void OnDeinitWindow(int nextWindowID);
 
-  bool OnMove(void);
-  bool OnClick(int iSelected);
+  void OnFocus(int iFocusedControl);
+  bool OnClick(int iSelectedControl);
 
 private:
-  void PromptForInput(unsigned int buttonIndex);
-
-  int GetSelectedControl(int iControl);
-  void SetSelectedControl(int iControl, int iSelectedControl);
-
-  bool SetupButtons(const GAME::GamePeripheralPtr& peripheral, CGUIFocusPlane* focusControl);
+  bool SetupButtons(const GAME::GameControllerPtr& controller, CGUIFocusPlane* focusControl);
   void CleanupButtons(void);
 
   CGUIButtonControl* GetButtonTemplate(void);
   CGUIButtonControl* MakeButton(const std::string& strLabel, unsigned int id, CGUIButtonControl* pButtonTemplate);
 
-  GAME::GamePeripheralPtr m_peripheral;
-  CGUIFocusPlane*         m_focusControl;
-  std::map<GAME::GamePeripheralPtr, unsigned int> m_lastControlIds; // peripheral add-on ID -> last selected control ID
+  GAME::GameControllerPtr     m_controller; // Active controller
+  CGUIFocusPlane*             m_focusControl;
+  unsigned int                m_selectedFeature;
+  GAME::IGUIControllerWizard* m_wizard;
 };

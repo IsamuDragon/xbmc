@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2012-2014 Team XBMC
+ *      Copyright (C) 2012-2015 Team XBMC
  *      http://xbmc.org
  *
  *  This Program is free software; you can redistribute it and/or modify
@@ -63,6 +63,8 @@ namespace GAME
 
     virtual bool GetClient(const std::string& strClientId, GameClientPtr& addon) const;
 
+    bool GetController(const std::string& strControllerId, GameControllerPtr& controller) const;
+
     /**
      * Resolve a file item to a list of game client IDs.
      *
@@ -76,6 +78,8 @@ namespace GAME
      *     different kinds of ROMs inside).
      */
     void GetGameClientIDs(const CFileItem& file, std::vector<std::string>& candidates) const;
+
+    std::string GetFeatureName(const std::string& strControllerId, unsigned int featureIndex) const;
 
     /**
      * Get a list of valid game client extensions (as determined by the tag in
@@ -105,9 +109,14 @@ namespace GAME
     virtual bool UpdateAddons();
     void UpdateExtensions();
 
-    typedef std::map<std::string, GameClientPtr> GameClientMap;
+    typedef std::string                           GameClientID;
+    typedef std::map<GameClientID, GameClientPtr> GameClientMap;
+
+    typedef std::string                               ControllerID;
+    typedef std::map<ControllerID, GameControllerPtr> ControllerMap;
 
     GameClientMap         m_gameClients;
+    ControllerMap         m_controllers;
     std::set<std::string> m_gameExtensions;
     CGameFileAutoLauncher m_fileLauncher;
     CCriticalSection      m_critSection;

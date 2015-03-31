@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2014 Team XBMC
+ *      Copyright (C) 2014-2015 Team XBMC
  *      http://xbmc.org
  *
  *  This Program is free software; you can redistribute it and/or modify
@@ -32,10 +32,6 @@ using namespace PERIPHERALS;
 
 CPeripheralBusAddon::CPeripheralBusAddon(CPeripherals *manager) :
     CPeripheralBus("PeripBusAddon", manager, PERIPHERAL_BUS_ADDON)
-{
-}
-
-CPeripheralBusAddon::~CPeripheralBusAddon(void)
 {
 }
 
@@ -75,6 +71,12 @@ bool CPeripheralBusAddon::GetAddonWithButtonMap(const CPeripheral* device, Perip
   return false;
 }
 
+unsigned int CPeripheralBusAddon::GetAddonCount(void) const
+{
+  CSingleLock lock(m_critSection);
+  return m_addons.size();
+}
+
 bool CPeripheralBusAddon::PerformDeviceScan(PeripheralScanResults &results)
 {
   VECADDONS addons;
@@ -99,7 +101,7 @@ bool CPeripheralBusAddon::PerformDeviceScan(PeripheralScanResults &results)
       // If add-on hasn't been created, try to create it now
       if (std::find(createdAddons.begin(), createdAddons.end(), addon) == createdAddons.end())
       {
-        if (addon->Create() != ADDON_STATUS_OK)
+        if (addon->CreateAddon() != ADDON_STATUS_OK)
         {
           m_failedAddons.push_back(addon);
           continue;

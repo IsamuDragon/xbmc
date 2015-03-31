@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2014 Team XBMC
+ *      Copyright (C) 2014-2015 Team XBMC
  *      http://xbmc.org
  *
  *  This Program is free software; you can redistribute it and/or modify
@@ -18,7 +18,7 @@
  *
  */
 
-#include "GenericJoystickDriverHandler.h"
+#include "GenericJoystickInputHandling.h"
 #include "DigitalAnalogButtonConverter.h"
 #include "input/joysticks/IJoystickButtonMap.h"
 #include "input/joysticks/IJoystickInputHandler.h"
@@ -28,96 +28,102 @@
 
 #include <algorithm>
 
-CGenericJoystickDriverHandler::CGenericJoystickDriverHandler(IJoystickInputHandler* handler, IJoystickButtonMap* buttonMap)
+CGenericJoystickInputHandling::CGenericJoystickInputHandling(IJoystickInputHandler* handler, IJoystickButtonMap* buttonMap)
  : m_handler(new CDigitalAnalogButtonConverter(handler)),
    m_buttonMap(buttonMap)
 {
 }
 
-CGenericJoystickDriverHandler::~CGenericJoystickDriverHandler(void)
+CGenericJoystickInputHandling::~CGenericJoystickInputHandling(void)
 {
   delete m_handler;
 }
 
-void CGenericJoystickDriverHandler::OnButtonMotion(unsigned int buttonIndex, bool bPressed)
+bool CGenericJoystickInputHandling::OnButtonMotion(unsigned int buttonIndex, bool bPressed)
 {
   const char pressed = bPressed ? 1 : 0;
 
   if (m_buttonStates.size() <= buttonIndex)
     m_buttonStates.resize(buttonIndex + 1);
 
-  if (m_buttonStates[buttonIndex] == pressed)
-    return;
+  bool bHandled = false;
 
-  char& oldState = m_buttonStates[buttonIndex];
-
-  unsigned int feature;
+  std::string feature;
   if (m_buttonMap->GetFeature(CJoystickDriverPrimitive(buttonIndex), feature))
   {
-    CLog::Log(LOGDEBUG, "CGenericJoystickDriverHandler: %s feature %u %s",
-              m_handler->DeviceID().c_str(), feature, bPressed ? "pressed" : "released");
+    CLog::Log(LOGDEBUG, "CGenericJoystickInputHandling: %s feature [ %s ] %s",
+              m_handler->ControllerID().c_str(), feature.c_str(), bPressed ? "pressed" : "released");
 
-    if (!oldState && pressed)
-      m_handler->OnButtonPress(feature, true);
-    else if (oldState && !pressed)
-      m_handler->OnButtonPress(feature, false);
-  }
-  else if (bPressed)
-  {
-    CLog::Log(LOGDEBUG, "CGenericJoystickDriverHandler: %s has no feature for button %u",
-              m_handler->DeviceID().c_str(), buttonIndex);
+    char& wasPressed = m_buttonStates[buttonIndex];
+
+    if (!wasPressed && pressed)
+      OnPress(feature);
+    else if (wasPressed && !pressed)
+      OnRelease(feature);
+
+    wasPressed = pressed;
+
+    if (pressed)
+      bHandled = true;
   }
 
-  oldState = pressed;
+  return bHandled;
 }
 
-void CGenericJoystickDriverHandler::OnHatMotion(unsigned int hatIndex, HatDirection newDirection)
+bool CGenericJoystickInputHandling::OnHatMotion(unsigned int hatIndex, HatDirection newDirection)
 {
   if (m_hatStates.size() <= hatIndex)
     m_hatStates.resize(hatIndex + 1);
 
   HatDirection& oldDirection = m_hatStates[hatIndex];
 
-  ProcessHatDirection(hatIndex, oldDirection, newDirection, HatDirectionUp);
-  ProcessHatDirection(hatIndex, oldDirection, newDirection, HatDirectionRight);
-  ProcessHatDirection(hatIndex, oldDirection, newDirection, HatDirectionDown);
-  ProcessHatDirection(hatIndex, oldDirection, newDirection, HatDirectionLeft);
+  bool bHandled = false;
+
+  bHandled |= ProcessHatDirection(hatIndex, oldDirection, newDirection, HatDirectionUp);
+  bHandled |= ProcessHatDirection(hatIndex, oldDirection, newDirection, HatDirectionRight);
+  bHandled |= ProcessHatDirection(hatIndex, oldDirection, newDirection, HatDirectionDown);
+  bHandled |= ProcessHatDirection(hatIndex, oldDirection, newDirection, HatDirectionLeft);
 
   oldDirection = newDirection;
+
+  return bHandled;
 }
 
-void CGenericJoystickDriverHandler::ProcessHatDirection(int index,
+bool CGenericJoystickInputHandling::ProcessHatDirection(int index,
     HatDirection oldDir, HatDirection newDir, HatDirection targetDir)
 {
+  bool bHandled = false;
+
   if ((oldDir & targetDir) != (newDir & targetDir))
   {
     const bool bActivated = (newDir & targetDir) != HatDirectionNone;
 
-    unsigned int feature;
+    std::string feature;
     if (m_buttonMap->GetFeature(CJoystickDriverPrimitive(index, targetDir), feature))
     {
-      CLog::Log(LOGDEBUG, "CGenericJoystickDriverHandler: %s feature %u %s",
-                m_handler->DeviceID().c_str(), feature, bActivated ? "activated" : "deactivated");
-      m_handler->OnButtonPress(feature, bActivated);
-    }
-    else
-    {
       if (bActivated)
-      {
-        CLog::Log(LOGDEBUG, "CGenericJoystickDriverHandler: %s has no feature for hat %u %s",
-                  m_handler->DeviceID().c_str(), index, CJoystickTranslator::HatDirectionToString(targetDir));
-      }
+        bHandled = true;
+
+      CLog::Log(LOGDEBUG, "CGenericJoystickInputHandling: %s feature [ %s ] %s from hat",
+                m_handler->ControllerID().c_str(), feature.c_str(), bActivated ? "activated" : "deactivated");
+
+      if (bActivated)
+        OnPress(feature);
+      else
+        OnRelease(feature);
     }
   }
+
+  return false;
 }
 
-void CGenericJoystickDriverHandler::OnAxisMotion(unsigned int axisIndex, float newPosition)
+bool CGenericJoystickInputHandling::OnAxisMotion(unsigned int axisIndex, float newPosition)
 {
   if (m_axisStates.size() <= axisIndex)
     m_axisStates.resize(axisIndex + 1);
 
   if (m_axisStates[axisIndex] == 0.0f && newPosition == 0.0f)
-    return;
+    return false;
 
   float oldPosition = m_axisStates[axisIndex];
   m_axisStates[axisIndex] = newPosition;
@@ -125,14 +131,18 @@ void CGenericJoystickDriverHandler::OnAxisMotion(unsigned int axisIndex, float n
   CJoystickDriverPrimitive positiveAxis(axisIndex, SemiAxisDirectionPositive);
   CJoystickDriverPrimitive negativeAxis(axisIndex, SemiAxisDirectionNegative);
 
-  unsigned int positiveFeature;
-  unsigned int negativeFeature;
+  std::string positiveFeature;
+  std::string negativeFeature;
 
   bool bHasFeaturePositive = m_buttonMap->GetFeature(positiveAxis, positiveFeature);
   bool bHasFeatureNegative = m_buttonMap->GetFeature(negativeAxis, negativeFeature);
 
+  bool bHandled = false;
+
   if (bHasFeaturePositive || bHasFeatureNegative)
   {
+    bHandled = true;
+
     // If the positive and negative semiaxis correspond to the same feature,
     // then we must be dealing with an analog stick or accelerometer. These both
     // require multiple axes, so record the axis and batch-process later during
@@ -168,16 +178,19 @@ void CGenericJoystickDriverHandler::OnAxisMotion(unsigned int axisIndex, float n
       }
     }
   }
+
+  return bHandled;
 }
 
-void CGenericJoystickDriverHandler::ProcessAxisMotions(void)
+void CGenericJoystickInputHandling::ProcessAxisMotions(void)
 {
-  std::vector<unsigned int> featuresToProcess;
+  std::vector<std::string> featuresToProcess;
   featuresToProcess.swap(m_featuresWithMotion);
 
-  for (std::vector<unsigned int>::const_iterator it = featuresToProcess.begin(); it != featuresToProcess.end(); ++it)
+  // Invoke callbacks for features with motion
+  for (std::vector<std::string>::const_iterator it = featuresToProcess.begin(); it != featuresToProcess.end(); ++it)
   {
-    const unsigned int feature = *it;
+    const std::string feature = *it;
 
     int  xIndex;
     bool xInverted;
@@ -200,9 +213,39 @@ void CGenericJoystickDriverHandler::ProcessAxisMotions(void)
       m_handler->OnAccelerometerMotion(feature, xPos, yPos, zPos);
     }
   }
+
+  // Digital buttons emulating analog buttons need to be repeated every frame
+  for (std::vector<std::string>::const_iterator it = m_repeatingFeatures.begin(); it != m_repeatingFeatures.end(); ++it)
+    m_handler->OnButtonPress(*it, true);
 }
 
-float CGenericJoystickDriverHandler::GetAxisState(int axisIndex) const
+void CGenericJoystickInputHandling::OnPress(const std::string& feature)
+{
+  const InputType inputType = m_handler->GetInputType(feature);
+
+  if (inputType == INPUT_TYPE_DIGITAL)
+    m_handler->OnButtonPress(feature, true);
+  else if (inputType == INPUT_TYPE_ANALOG)
+    StartDigitalRepeating(feature); // Analog actions repeat every frame
+}
+
+void CGenericJoystickInputHandling::OnRelease(const std::string& feature)
+{
+  m_handler->OnButtonPress(feature, false);
+  StopDigitalRepeating(feature);
+}
+
+void CGenericJoystickInputHandling::StartDigitalRepeating(const std::string& feature)
+{
+  m_repeatingFeatures.push_back(feature);
+}
+
+void CGenericJoystickInputHandling::StopDigitalRepeating(const std::string& feature)
+{
+  m_repeatingFeatures.erase(std::remove(m_repeatingFeatures.begin(), m_repeatingFeatures.end(), feature), m_repeatingFeatures.end());
+}
+
+float CGenericJoystickInputHandling::GetAxisState(int axisIndex) const
 {
   return (0 <= axisIndex && axisIndex < (int)m_axisStates.size()) ? m_axisStates[axisIndex] : 0;
 }

@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2014 Team XBMC
+ *      Copyright (C) 2014-2015 Team XBMC
  *      http://xbmc.org
  *
  *  This Program is free software; you can redistribute it and/or modify
@@ -36,7 +36,7 @@ typedef struct CB_GameLib
   /*!
    * Request a port that can provide player input.
    */
-  bool (*OpenPort)(void* addonData, unsigned int port, const char* addonId, game_input_device_caps* device_caps);
+  bool (*OpenPort)(void* addonData, unsigned int port);
 
   /*!
    * Close an opened port.

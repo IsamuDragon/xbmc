@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2014 Team XBMC
+ *      Copyright (C) 2014-2015 Team XBMC
  *      http://xbmc.org
  *
  *  This Program is free software; you can redistribute it and/or modify
@@ -46,8 +46,7 @@ public:
   bool           IsFocused(void) const      { return m_bFocused; }
   const CCircle& GetFocusedArea(void) const { return m_focusArea; }
 
-  void SetFocus(const CCircle& focusArea);
-  void SetFocus(const CRect& focusArea);
+  void SetFocus(const CShape* focusArea);
   void Unfocus(void);
 
   // implementation of CGUIControl

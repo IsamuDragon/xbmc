@@ -1,6 +1,5 @@
-#pragma once
 /*
- *      Copyright (C) 2012-2014 Team XBMC
+ *      Copyright (C) 2012-2015 Team XBMC
  *      http://xbmc.org
  *
  *  This Program is free software; you can redistribute it and/or modify
@@ -18,6 +17,7 @@
  *  <http://www.gnu.org/licenses/>.
  *
  */
+#pragma once
 
 #include "AddonCallbacks.h"
 #include "include/kodi_game_callbacks.h"
@@ -45,7 +45,7 @@ public:
   CB_GameLib* GetCallbacks() const { return m_callbacks; }
 
   static void CloseGame(void* addonData);
-  static bool OpenPort(void* addonData, unsigned int port, const char* addon_id, game_input_device_caps* device_caps);
+  static bool OpenPort(void* addonData, unsigned int port);
   static void ClosePort(void* addonData, unsigned int port);
   static void EnvironmentSetRotation(void* addonData, GAME_ROTATION rotation);
   static bool EnvironmentGetOverscan(void* addonData);

@@ -19,29 +19,29 @@
  */
 
 #include "GUIDialogControllerInput.h"
-#include "games/addons/GamePeripheral.h"
+#include "games/addons/GameController.h"
+#include "games/windows/wizards/GUIControllerWizard.h"
 #include "guilib/Geometry.h"
 #include "guilib/GUIButtonControl.h"
 #include "guilib/GUIControl.h"
 #include "guilib/GUIControlGroupList.h"
 #include "guilib/GUIFocusPlane.h"
-#include "guilib/GUIWindowManager.h"
+#include "guilib/GUIMessage.h"
 #include "guilib/WindowIDs.h"
-#include "input/Key.h"
-#include "utils/log.h"
+
+using namespace GAME;
 
 #define GROUP_LIST             996
 #define BUTTON_TEMPLATE       1000
 #define BUTTON_START          1001
 
-using namespace ADDON;
-using namespace GAME;
-
 CGUIDialogControllerInput::CGUIDialogControllerInput(void)
   : CGUIDialog(WINDOW_DIALOG_CONTROLLER_INPUT, "DialogControllerInput.xml"),
-    m_peripheral(NULL),
-    m_focusControl(NULL)
+    m_focusControl(NULL),
+    m_selectedFeature(0),
+    m_wizard(NULL)
 {
+  // initialize CGUIWindow
   m_loadType = KEEP_IN_MEMORY;
 }
 
@@ -55,47 +55,31 @@ bool CGUIDialogControllerInput::OnMessage(CGUIMessage& message)
         return true;
       break;
     }
-  }
-
-  if (CGUIDialog::OnMessage(message))
-  {
-    switch (message.GetMessage())
+    case GUI_MSG_FOCUSED:
     {
-      case GUI_MSG_MOVE:
-      {
-        OnMove();
-        break;
-      }
+      const int focusedControl = message.GetControlId();
+      OnFocus(focusedControl);
+      break;
     }
-    return true;
+    case GUI_MSG_LOSTFOCUS:
+    case GUI_MSG_UNFOCUS_ALL:
+    {
+      OnFocus(-1);
+      break;
+    }
   }
 
-  return false;
-}
-
-bool CGUIDialogControllerInput::OnAction(const CAction& action)
-{
-  if (action.GetID() == ACTION_CONTEXT_MENU)
-  {
-    Close();
-    return true;
-  }
-
-  return CGUIDialog::OnAction(action);
+  return CGUIDialog::OnMessage(message);
 }
 
 void CGUIDialogControllerInput::OnInitWindow(void)
 {
   CGUIDialog::OnInitWindow();
 
-  // disable the template button control
+  // Disable the template button control
   CGUIButtonControl* pButtonTemplate = GetButtonTemplate();
   if (pButtonTemplate)
     pButtonTemplate->SetVisible(false);
-
-  SetSelectedControl(GROUP_LIST, m_lastControlID);
-
-  OnMove();
 }
 
 void CGUIDialogControllerInput::OnDeinitWindow(int nextWindowID)
@@ -103,97 +87,109 @@ void CGUIDialogControllerInput::OnDeinitWindow(int nextWindowID)
   if (m_focusControl)
     m_focusControl->Unfocus();
 
-  // save selected item for next time
-  if (m_peripheral)
-  {
-    int iSelectedControl = GetSelectedControl(GROUP_LIST);
-    if (iSelectedControl >= BUTTON_START)
-      m_lastControlIds[m_peripheral] = iSelectedControl;
-  }
-
   CGUIDialog::OnDeinitWindow(nextWindowID);
 }
 
-void CGUIDialogControllerInput::DoModal(const GamePeripheralPtr& peripheral, CGUIFocusPlane* focusControl)
+void CGUIDialogControllerInput::Focus(unsigned int iFeature)
+{
+  //CGUIMessage msg(GUI_MSG_ITEM_SELECT, GetID(), GROUP_LIST, iFeature + BUTTON_START);
+  CGUIMessage msg(GUI_MSG_SETFOCUS, GetID(), iFeature + BUTTON_START);
+  OnMessage(msg);
+}
+
+void CGUIDialogControllerInput::SetLabel(unsigned int iFeature, const std::string& strLabel)
+{
+  SET_CONTROL_LABEL(iFeature + BUTTON_START, strLabel);
+}
+
+void CGUIDialogControllerInput::ResetLabel(unsigned int iFeature)
+{
+  if (m_controller)
+  {
+    const std::vector<CGameControllerFeature>& features = m_controller->Layout().Features();
+
+    if (iFeature < features.size())
+    {
+      const std::string& strLabel = m_controller->GetString(features.at(iFeature).Label());
+      SET_CONTROL_LABEL(iFeature + BUTTON_START, strLabel);
+    }
+  }
+}
+
+void CGUIDialogControllerInput::End(void)
+{
+  Close();
+}
+
+void CGUIDialogControllerInput::DoModal(const GameControllerPtr& controller, CGUIFocusPlane* focusControl)
 {
   if (IsDialogRunning())
     return;
 
-  Initialize();
+  // Initialize CGUIWindow
+  if (!Initialize())
+    return;
 
-  if (SetupButtons(peripheral, focusControl))
+  if (SetupButtons(controller, focusControl))
+  {
+    m_wizard = new CGUIControllerWizard(this, m_controller);
+    m_wizard->Run();
+
     CGUIDialog::DoModal();
+
+    delete m_wizard;
+    m_wizard = NULL;
+
+    m_controller = NULL;
+    m_focusControl = NULL;
+  }
 
   CleanupButtons();
 }
 
-bool CGUIDialogControllerInput::OnMove(void)
+void CGUIDialogControllerInput::OnFocus(int iFocusedControl)
 {
-  if (m_peripheral && m_focusControl)
+  if (m_controller && m_focusControl)
   {
-    const std::vector<GAME::Button>& buttons = m_peripheral->Buttons();
+    const std::vector<CGameControllerFeature>& features = m_controller->Layout().Features();
 
-    int iSelectedIndex = GetSelectedControl(GROUP_LIST) - BUTTON_START;
-    if (0 <= iSelectedIndex && iSelectedIndex < (int)buttons.size())
+    const int iFocusedIndex = iFocusedControl - BUTTON_START;
+
+    if (0 <= iFocusedIndex && iFocusedIndex < (int)features.size())
     {
-      m_focusControl->SetFocus(buttons[iSelectedIndex].focusArea);
-      return true;
+      m_selectedFeature = iFocusedIndex;
+
+      if (m_wizard)
+        m_wizard->OnFocus(m_selectedFeature);
+
+      m_focusControl->SetFocus(features[m_selectedFeature].Geometry());
+    }
+    else
+    {
+      if (m_wizard)
+        m_wizard->Abort();
+
+      m_focusControl->Unfocus();
     }
   }
-
-  return false;
 }
 
 bool CGUIDialogControllerInput::OnClick(int iSelectedControl)
 {
-  if (m_peripheral && m_focusControl && iSelectedControl >= BUTTON_START)
+  const int iSelectedFeature = iSelectedControl - BUTTON_START;
+
+  if (m_wizard && iSelectedFeature == (int)m_selectedFeature)
   {
-    PromptForInput(iSelectedControl - BUTTON_START);
+    m_wizard->Run(m_selectedFeature);
     return true;
   }
 
   return false;
 }
 
-void CGUIDialogControllerInput::PromptForInput(unsigned int buttonIndex)
+bool CGUIDialogControllerInput::SetupButtons(const GameControllerPtr& controller, CGUIFocusPlane* focusControl)
 {
-  const std::vector<GAME::Button>& buttons = m_peripheral->Buttons();
-  if (buttonIndex < buttons.size())
-  {
-    const GAME::Button& buton = buttons[buttonIndex];
-
-    // TODO: Change label
-    const std::string& strLabel = buton.strLabel;
-
-    // TODO: Wait for input
-    // input = GetInput();
-
-    // TODO: Record input
-    // buttonMap->SetInput(button, input);
-
-    // TODO: Change label back
-  }
-}
-
-int CGUIDialogControllerInput::GetSelectedControl(int iControl)
-{
-  CGUIMessage msg(GUI_MSG_ITEM_SELECTED, GetID(), iControl);
-
-  if (CGUIWindow::OnMessage(msg))
-    return msg.GetParam1() >= 0 ? msg.GetParam1() : -1;
-
-  return -1;
-}
-
-void CGUIDialogControllerInput::SetSelectedControl(int iControl, int iSelectedControl)
-{
-  CGUIMessage msg(GUI_MSG_ITEM_SELECT, GetID(), iControl, iSelectedControl);
-  OnMessage(msg);
-}
-
-bool CGUIDialogControllerInput::SetupButtons(const GamePeripheralPtr& peripheral, CGUIFocusPlane* focusControl)
-{
-  if (!peripheral || !focusControl)
+  if (!controller || !focusControl)
     return false;
 
   CGUIButtonControl* pButtonTemplate = GetButtonTemplate();
@@ -202,31 +198,32 @@ bool CGUIDialogControllerInput::SetupButtons(const GamePeripheralPtr& peripheral
   if (!pButtonTemplate || !pGroupList)
     return false;
 
-  const std::vector<GAME::Button>& buttons = peripheral->Buttons();
+  const std::vector<CGameControllerFeature>& features = controller->Layout().Features();
 
   unsigned int buttonId = BUTTON_START;
-  for (std::vector<GAME::Button>::const_iterator it = buttons.begin(); it != buttons.end(); ++it)
+  for (std::vector<CGameControllerFeature>::const_iterator it = features.begin(); it != features.end(); ++it)
   {
-    CGUIButtonControl* pButton = MakeButton(it->strLabel, buttonId++, pButtonTemplate);
+    CGUIButtonControl* pButton = MakeButton(controller->GetString(it->Label()), buttonId++, pButtonTemplate);
 
-    // try inserting context buttons at position specified by template
-    // button, if template button is not in grouplist fallback to adding
-    // new buttons at the end of grouplist
+    // Try inserting context buttons at position specified by template button,
+    // if template button is not in grouplist fallback to adding new buttons at
+    // the end of grouplist
     if (!pGroupList->InsertControl(pButton, pButtonTemplate))
       pGroupList->AddControl(pButton);
   }
 
-  // update our default control
+  // Configure CGUIControlGroup
   m_defaultControl = GROUP_LIST;
+
+  // Configure CGUIWindow
   m_lastControlID = BUTTON_START;
 
-  m_peripheral = peripheral;
-  m_focusControl = focusControl;
+  // Configure CGUIDialogControllerInput
+  m_selectedFeature = 0;
 
-  // restore last selected control
-  std::map<GAME::GamePeripheralPtr, unsigned int>::const_iterator it = m_lastControlIds.find(m_peripheral);
-  if (it != m_lastControlIds.end())
-    m_lastControlID = it->second;
+  // Success
+  m_controller = controller;
+  m_focusControl = focusControl;
 
   return true;
 }
@@ -237,7 +234,7 @@ void CGUIDialogControllerInput::CleanupButtons(void)
   if (pGroupList)
     pGroupList->ClearAll();
 
-  m_peripheral = NULL;
+  m_controller = NULL;
   m_focusControl = NULL;
 }
 
@@ -255,7 +252,7 @@ CGUIButtonControl* CGUIDialogControllerInput::MakeButton(const std::string& strL
 {
   CGUIButtonControl* pButton = new CGUIButtonControl(*pButtonTemplate);
 
-  // set the button's ID and position
+  // Set the button's ID and position
   pButton->SetID(id);
   pButton->SetVisible(true);
   pButton->SetLabel(strLabel);

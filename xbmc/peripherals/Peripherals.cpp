@@ -716,6 +716,54 @@ bool CPeripherals::GetNextKeypress(float frameTime, CKey &key)
   return false;
 }
 
+PeripheralAddonPtr CPeripherals::GetAddon(const CPeripheral* device)
+{
+  PeripheralAddonPtr addon;
+
+  CPeripheralBusAddon* addonBus = static_cast<CPeripheralBusAddon*>(GetBusByType(PERIPHERAL_BUS_ADDON));
+
+  if (device && addonBus)
+  {
+    PeripheralBusType busType = device->GetBusType();
+
+    if (busType == PERIPHERAL_BUS_ADDON)
+    {
+      // If device is from an add-on, use that add-on
+      unsigned int index;
+      addonBus->SplitLocation(device->Location(), addon, index);
+    }
+    else
+    {
+      // Otherwise, have the add-on bus find a suitable add-on
+      addonBus->GetAddonWithButtonMap(device, addon);
+    }
+  }
+
+  return addon;
+}
+
+void CPeripherals::RegisterJoystickButtonMapper(IJoystickButtonMapper* mapper)
+{
+  std::vector<CPeripheral*> peripherals;
+
+  GetPeripheralsWithFeature(peripherals, FEATURE_JOYSTICK);
+  GetPeripheralsWithFeature(peripherals, FEATURE_KEYBOARD);
+
+  for (std::vector<CPeripheral*>::iterator it = peripherals.begin(); it != peripherals.end(); ++it)
+    (*it)->RegisterJoystickButtonMapper(mapper);
+}
+
+void CPeripherals::UnregisterJoystickButtonMapper(IJoystickButtonMapper* mapper)
+{
+  std::vector<CPeripheral*> peripherals;
+
+  GetPeripheralsWithFeature(peripherals, FEATURE_JOYSTICK);
+  GetPeripheralsWithFeature(peripherals, FEATURE_KEYBOARD);
+
+  for (std::vector<CPeripheral*>::iterator it = peripherals.begin(); it != peripherals.end(); ++it)
+    (*it)->UnregisterJoystickButtonMapper(mapper);
+}
+
 void CPeripherals::OnSettingChanged(const CSetting *setting)
 {
   if (setting == NULL)

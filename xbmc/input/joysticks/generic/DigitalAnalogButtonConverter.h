@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2014 Team XBMC
+ *      Copyright (C) 2014-2015 Team XBMC
  *      http://xbmc.org
  *
  *  This Program is free software; you can redistribute it and/or modify
@@ -24,15 +24,15 @@
 #include <vector>
 
 /*!
+ * \ingroup joysticks_generic
+ *
  * \brief Convert between digital and analog button events
  *
- * A game peripheral may contain a digital button mapped to a driver axis, or
- * an analog button mapped to a driver's digital button.
+ * If the input type is digital, driver axes are converted to digital buttons by
+ * thresholding around 0.5.
  *
- * This class converts these button presses to the format expected by the input
- * handler:
- *    - Digital button events are converted to analog events with magnitude 0.0 or 1.0
- *    - Analog button events are thresholded around 0.5 and reported as pressed/unpressed
+ * If the input type is analog, driver buttons/hats are converted to analog
+ * events with magnitude 0.0 or 1.0.
  */
 class CDigitalAnalogButtonConverter : public IJoystickInputHandler
 {
@@ -40,13 +40,18 @@ public:
   CDigitalAnalogButtonConverter(IJoystickInputHandler* handler);
 
   // implementation of IJoystickInputHandler
-  virtual std::string DeviceID(void) const;
-  virtual bool OnButtonPress(unsigned int featureIndex, bool bPressed);
-  virtual bool OnButtonMotion(unsigned int featureIndex, float magnitude);
-  virtual bool OnAnalogStickMotion(unsigned int featureIndex, float x, float y);
-  virtual bool OnAccelerometerMotion(unsigned int featureIndex, float x, float y, float z);
+  virtual std::string ControllerID(void) const;
+  virtual InputType GetInputType(const std::string& feature) const;
+  virtual bool OnButtonPress(const std::string& feature, bool bPressed);
+  virtual bool OnButtonMotion(const std::string& feature, float magnitude);
+  virtual bool OnAnalogStickMotion(const std::string& feature, float x, float y);
+  virtual bool OnAccelerometerMotion(const std::string& feature, float x, float y, float z);
 
 private:
+  bool IsActivated(const std::string& feature) const;
+  void Activate(const std::string& feature);
+  void Deactivate(const std::string& feature);
+
   IJoystickInputHandler* const m_handler;
-  std::vector<unsigned int>    m_pressedButtons; // for tracking digital buttons mapped to axes
+  std::vector<std::string>     m_activatedFeatures; // for tracking analog features mapped to digital input
 };

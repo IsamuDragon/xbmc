@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2005-2013 Team XBMC
+ *      Copyright (C) 2015 Team XBMC
  *      http://xbmc.org
  *
  *  This Program is free software; you can redistribute it and/or modify
@@ -22,6 +22,7 @@
 #include "input/InputManager.h"
 #include "input/joysticks/generic/GenericJoystickKeyboardHandler.h"
 #include "input/Key.h"
+#include "threads/SingleLock.h"
 
 using namespace PERIPHERALS;
 
@@ -52,6 +53,8 @@ bool CPeripheralKeyboard::InitialiseFeature(const PeripheralFeature feature)
 
 void CPeripheralKeyboard::RegisterJoystickDriverHandler(IJoystickDriverHandler* handler)
 {
+  CSingleLock lock(m_handlerMutex);
+
   bool bFound = false;
 
   for (KeyboardHandlerVector::iterator it = m_keyboardHandlers.begin(); !bFound && it != m_keyboardHandlers.end(); ++it)
@@ -67,6 +70,8 @@ void CPeripheralKeyboard::RegisterJoystickDriverHandler(IJoystickDriverHandler* 
 
 void CPeripheralKeyboard::UnregisterJoystickDriverHandler(IJoystickDriverHandler* handler)
 {
+  CSingleLock lock(m_handlerMutex);
+
   for (KeyboardHandlerVector::iterator it = m_keyboardHandlers.begin(); it != m_keyboardHandlers.end(); ++it)
   {
     if (it->first == handler)
@@ -80,16 +85,20 @@ void CPeripheralKeyboard::UnregisterJoystickDriverHandler(IJoystickDriverHandler
 
 bool CPeripheralKeyboard::OnKeyPress(const CKey& key)
 {
+  CSingleLock lock(m_handlerMutex);
+
   bool bHandled = false;
 
   for (KeyboardHandlerVector::iterator it = m_keyboardHandlers.begin(); it != m_keyboardHandlers.end(); ++it)
-    bHandled |= it->second->OnKeyPress(key);
+    bHandled = bHandled || it->second->OnKeyPress(key);
 
   return bHandled;
 }
 
 void CPeripheralKeyboard::OnKeyRelease(const CKey& key)
 {
+  CSingleLock lock(m_handlerMutex);
+
   for (KeyboardHandlerVector::iterator it = m_keyboardHandlers.begin(); it != m_keyboardHandlers.end(); ++it)
     it->second->OnKeyRelease(key);
 }

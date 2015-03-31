@@ -1,6 +1,5 @@
-#pragma once
 /*
- *      Copyright (C) 2005-2013 Team XBMC
+ *      Copyright (C) 2014-2015 Team XBMC
  *      http://xbmc.org
  *
  *  This Program is free software; you can redistribute it and/or modify
@@ -18,11 +17,13 @@
  *  <http://www.gnu.org/licenses/>.
  *
  */
+#pragma once
 
 #include "Peripheral.h"
+#include "input/joysticks/DefaultController.h"
 #include "input/joysticks/JoystickTypes.h"
 #include "input/joysticks/IJoystickDriverHandler.h"
-#include "input/joysticks/generic/DefaultJoystickInputHandler.h"
+#include "threads/CriticalSection.h"
 
 #include <string>
 #include <vector>
@@ -45,9 +46,9 @@ namespace PERIPHERALS
     virtual void UnregisterJoystickDriverHandler(IJoystickDriverHandler* handler);
 
     // implementation of IJoystickDriverHandler
-    virtual void OnButtonMotion(unsigned int buttonIndex, bool bPressed);
-    virtual void OnHatMotion(unsigned int hatIndex, HatDirection direction);
-    virtual void OnAxisMotion(unsigned int axisIndex, float position);
+    virtual bool OnButtonMotion(unsigned int buttonIndex, bool bPressed);
+    virtual bool OnHatMotion(unsigned int hatIndex, HatDirection direction);
+    virtual bool OnAxisMotion(unsigned int axisIndex, float position);
     virtual void ProcessAxisMotions(void);
 
     /*!
@@ -88,7 +89,8 @@ namespace PERIPHERALS
     unsigned int                         m_buttonCount;
     unsigned int                         m_hatCount;
     unsigned int                         m_axisCount;
-    CDefaultJoystickInputHandler         m_defaultInputHandler;
+    CDefaultController                   m_defaultInputHandler;
     std::vector<IJoystickDriverHandler*> m_driverHandlers;
+    CCriticalSection                     m_handlerMutex;
   };
 }

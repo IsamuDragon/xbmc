@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2014 Team XBMC
+ *      Copyright (C) 2014-2015 Team XBMC
  *      http://xbmc.org
  *
  *  This Program is free software; you can redistribute it and/or modify
@@ -28,24 +28,32 @@ class IJoystickInputHandler;
 class IJoystickButtonMap;
 
 /*!
+ * \ingroup joysticks_generic
+ *
  * \brief Generic implementation of IJoystickDriverHandler to translate raw
  *        actions into physical joystick features using the provided button map
  */
-class CGenericJoystickDriverHandler : public IJoystickDriverHandler
+class CGenericJoystickInputHandling : public IJoystickDriverHandler
 {
 public:
-  CGenericJoystickDriverHandler(IJoystickInputHandler* handler, IJoystickButtonMap* buttonMap);
+  CGenericJoystickInputHandling(IJoystickInputHandler* handler, IJoystickButtonMap* buttonMap);
 
-  virtual ~CGenericJoystickDriverHandler(void);
+  virtual ~CGenericJoystickInputHandling(void);
 
   // implementation of IJoystickDriverHandler
-  virtual void OnButtonMotion(unsigned int buttonIndex, bool bPressed);
-  virtual void OnHatMotion(unsigned int hatIndex, HatDirection direction);
-  virtual void OnAxisMotion(unsigned int axisIndex, float position);
+  virtual bool OnButtonMotion(unsigned int buttonIndex, bool bPressed);
+  virtual bool OnHatMotion(unsigned int hatIndex, HatDirection direction);
+  virtual bool OnAxisMotion(unsigned int axisIndex, float position);
   virtual void ProcessAxisMotions(void);
 
 private:
-  void ProcessHatDirection(int index, HatDirection oldDir, HatDirection newDir, HatDirection targetDir);
+  bool ProcessHatDirection(int index, HatDirection oldDir, HatDirection newDir, HatDirection targetDir);
+
+  void OnPress(const std::string& feature);
+  void OnRelease(const std::string& feature);
+
+  void StartDigitalRepeating(const std::string& feature);
+  void StopDigitalRepeating(const std::string& feature);
 
   float GetAxisState(int axisIndex) const;
 
@@ -54,5 +62,6 @@ private:
   std::vector<char>            m_buttonStates; // std::vector is specialized for <bool>
   std::vector<HatDirection>    m_hatStates;
   std::vector<float>           m_axisStates;
-  std::vector<unsigned int>    m_featuresWithMotion;
+  std::vector<std::string>     m_featuresWithMotion;
+  std::vector<std::string>     m_repeatingFeatures;
 };

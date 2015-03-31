@@ -1,6 +1,6 @@
-SRCS=DefaultJoystickInputHandler.cpp \
-     DigitalAnalogButtonConverter.cpp \
-     GenericJoystickDriverHandler.cpp \
+SRCS=DigitalAnalogButtonConverter.cpp \
+     GenericJoystickButtonMapping.cpp \
+     GenericJoystickInputHandling.cpp \
      GenericJoystickKeyboardHandler.cpp \
 
 LIB=input_joysticks_generic.a

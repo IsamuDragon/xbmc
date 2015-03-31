@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2014 Team XBMC
+ *      Copyright (C) 2014-2015 Team XBMC
  *      http://xbmc.org
  *
  *  This Program is free software; you can redistribute it and/or modify
@@ -126,14 +126,14 @@ extern "C"
 
   /*!
    * @brief Get the features that allow translation from the joystick to the given device
-   * @param joystick      The joystick's properties; unknown values may be left at their default
-   * @param device        The device profile being requested
+   * @param joystick      The device's joystick properties; unknown values may be left at their default
+   * @param controller_id The controller profile being requested
    * @param feature_count The number of features allocated for the features array
    * @param features      The array of allocated features
    * @return PERIPHERAL_NO_ERROR if successful; array must be freed using
    *         FreeButtonMap() in this case
    */
-  PERIPHERAL_ERROR GetButtonMap(const JOYSTICK_INFO* joystick, const char* device,
+  PERIPHERAL_ERROR GetButtonMap(const JOYSTICK_INFO* joystick, const char* controller_id,
                                 unsigned int* feature_count, JOYSTICK_FEATURE** features);
 
   /*!
@@ -148,12 +148,12 @@ extern "C"
 
   /*!
    * @brief Update joystick feature
-   * @param joystick    The joystick's properties; unknown values may be left at their default
-   * @param device      The device profile being updated
-   * @param feature     The feature's new driver value
+   * @param joystick      The device's joystick properties; unknown values may be left at their default
+   * @param controller_id The controller profile being updated
+   * @param feature       The feature's new driver value
    * @return PERIPHERAL_NO_ERROR if successful
    */
-  PERIPHERAL_ERROR MapJoystickFeature(const JOYSTICK_INFO* joystick, const char* device,
+  PERIPHERAL_ERROR MapJoystickFeature(const JOYSTICK_INFO* joystick, const char* controller_id,
                                       JOYSTICK_FEATURE* feature);
 #endif
   ///}
@@ -178,7 +178,7 @@ extern "C"
     pClient->FreeJoystickInfo               = FreeJoystickInfo;
     pClient->GetButtonMap                   = GetButtonMap;
     pClient->FreeButtonMap                  = FreeButtonMap;
-    pClient->MapJoystickFeature          = MapJoystickFeature;
+    pClient->MapJoystickFeature             = MapJoystickFeature;
 #endif
   };
 

@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2012-2014 Team XBMC
+ *      Copyright (C) 2012-2015 Team XBMC
  *      http://xbmc.org
  *
  *  This Program is free software; you can redistribute it and/or modify
@@ -63,8 +63,23 @@ static const PortMapping ports[] =
 };
 */
 
+// --- AddonIdEqual ------------------------------------------------------------
 
-/* static */
+namespace GAME
+{
+  struct AddonIdEqual
+  {
+    AddonIdEqual(const std::string& strId) : m_strId(strId) { }
+
+    bool operator()(const AddonPtr& addon) const { return addon && addon->ID() == m_strId; }
+
+  private:
+    const std::string m_strId;
+  };
+}
+
+// --- CGameManager ------------------------------------------------------------
+
 CGameManager& CGameManager::Get()
 {
   static CGameManager gameManagerInstance;
@@ -103,6 +118,50 @@ bool CGameManager::UpdateAddons()
         CAddonMgr::Get().DisableAddon((*it)->ID());
     }
   }
+
+  VECADDONS controllers;
+  if (CAddonMgr::Get().GetAddons(ADDON_GAME_CONTROLLER, controllers, true))
+  {
+    CSingleLock lock(m_critSection);
+
+    for (VECADDONS::const_iterator it = controllers.begin(); it != controllers.end(); it++)
+    {
+      const GameControllerPtr& controller = std::dynamic_pointer_cast<CGameController>(*it);
+
+      if (!controller)
+        continue;
+
+      if (m_controllers.find(controller->ID()) != m_controllers.end())
+        continue; // Already registered
+
+      if (!controller->LoadLayout())
+      {
+        CLog::Log(LOGERROR, "Failed to load controller %s", controller->ID().c_str());
+        continue;
+      }
+
+      if (controller->Layout().FeatureCount() == 0)
+      {
+        CLog::Log(LOGERROR, "Controller %s: no features!", controller->ID().c_str());
+        continue;
+      }
+
+      m_controllers[controller->ID()] = controller;
+    }
+
+    // Check if add-ons have been removed
+    for (ControllerMap::const_iterator it = m_controllers.begin(); it != m_controllers.end(); ++it)
+    {
+      bool bFound = std::count_if(controllers.begin(), controllers.end(), AddonIdEqual(it->first)) > 0;
+
+      if (!bFound)
+      {
+        m_controllers.erase(it);
+        it = m_controllers.begin();
+      }
+    }
+  }
+
   return true;
 }
 
@@ -182,6 +241,20 @@ bool CGameManager::GetClient(const std::string& strClientId, GameClientPtr& addo
   return false;
 }
 
+bool CGameManager::GetController(const std::string& strControllerId, GameControllerPtr& addon) const
+{
+  CSingleLock lock(m_critSection);
+
+  ControllerMap::const_iterator it = m_controllers.find(strControllerId);
+  if (it != m_controllers.end())
+  {
+    addon = it->second;
+    return true;
+  }
+
+  return false;
+}
+
 void CGameManager::GetGameClientIDs(const CFileItem& file, std::vector<std::string>& candidates) const
 {
   CSingleLock lock(m_critSection);
@@ -204,6 +277,17 @@ void CGameManager::GetGameClientIDs(const CFileItem& file, std::vector<std::stri
     if (!strRequestedClient.empty())
       break;
   }
+}
+
+std::string CGameManager::GetFeatureName(const std::string& strControllerId, unsigned int featureIndex) const
+{
+  CSingleLock lock(m_critSection);
+
+  GameControllerPtr controller;
+  if (GetController(strControllerId, controller) && featureIndex < controller->Layout().FeatureCount())
+    return controller->Layout().Features()[featureIndex].Name();
+
+  return "";
 }
 
 void CGameManager::GetExtensions(std::vector<std::string> &exts) const

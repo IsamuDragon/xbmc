@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2014 Team XBMC
+ *      Copyright (C) 2014-2015 Team XBMC
  *      http://xbmc.org
  *
  *  This Program is free software; you can redistribute it and/or modify
@@ -19,46 +19,17 @@
  */
 #pragma once
 
-#define DEFAULT_GAME_CONTROLLER   "game.controller.default" // TODO: Move me
-
 /*!
  * \ingroup joysticks
- * \brief Features available on the default controller
+ * \brief Cardinal directions
  */
-enum JoystickFeatureID
+enum CardinalDirection
 {
-  JoystickIDButtonA,
-  JoystickIDButtonB,
-  JoystickIDButtonX,
-  JoystickIDButtonY,
-  JoystickIDButtonStart,
-  JoystickIDButtonBack,
-  JoystickIDButtonGuide,
-  JoystickIDButtonLeftBumper,
-  JoystickIDButtonRightBumper,
-  JoystickIDButtonLeftStick,
-  JoystickIDButtonRightStick,
-  JoystickIDButtonUp,
-  JoystickIDButtonRight,
-  JoystickIDButtonDown,
-  JoystickIDButtonLeft,
-  JoystickIDTriggerLeft,
-  JoystickIDTriggerRight,
-  JoystickIDAnalogStickLeft,
-  JoystickIDAnalogStickRight,
-  JoystickIDAccelerometer,
-};
-
-/*!
- * \ingroup joysticks
- * \brief Types of features that emit input events
- */
-enum JoystickFeatureType
-{
-  JoystickDigitalButton,   /*!< @brief Button with two states, pressed and released */
-  JoystickAnalogButton,    /*!< @brief Trigger or pressure-sensitive button */
-  JoystickAnalogStick,     /*!< @brief Control stick capable of motion in two directions */
-  JoystickAccelerometer,   /*!< @brief Accelerometer with x, y and z axes */
+  DirectionUnknown,
+  DirectionUp,
+  DirectionDown,
+  DirectionRight,
+  DirectionLeft,
 };
 
 /*!
@@ -68,10 +39,10 @@ enum JoystickFeatureType
 enum HatDirection
 {
   HatDirectionNone      = 0x0,    /*!< @brief no directions are pressed */
-  HatDirectionLeft      = 0x1,    /*!< @brief only left is pressed */
-  HatDirectionRight     = 0x2,    /*!< @brief only right is pressed */
-  HatDirectionUp        = 0x4,    /*!< @brief only up is pressed */
-  HatDirectionDown      = 0x8,    /*!< @brief only down is pressed */
+  HatDirectionUp        = 0x1,    /*!< @brief only up is pressed */
+  HatDirectionDown      = 0x2,    /*!< @brief only down is pressed */
+  HatDirectionRight     = 0x4,    /*!< @brief only right is pressed */
+  HatDirectionLeft      = 0x8,    /*!< @brief only left is pressed */
   HatDirectionLeftUp    = HatDirectionLeft  | HatDirectionUp,
   HatDirectionLeftDown  = HatDirectionLeft  | HatDirectionDown,
   HatDirectionRightUp   = HatDirectionRight | HatDirectionUp,

@@ -1,5 +1,5 @@
 /*
- *      Copyright (C) 2014 Team XBMC
+ *      Copyright (C) 2014-2015 Team XBMC
  *      http://xbmc.org
  *
  *  This Program is free software; you can redistribute it and/or modify
@@ -50,10 +50,10 @@
 #endif
 
 /* current Peripheral API version */
-#define PERIPHERAL_API_VERSION "1.0.2"
+#define PERIPHERAL_API_VERSION "1.0.7"
 
 /* min. Peripheral API version */
-#define PERIPHERAL_MIN_API_VERSION "1.0.2"
+#define PERIPHERAL_MIN_API_VERSION "1.0.7"
 
 /* indicates a joystick has no preference for port number */
 #define NO_PORT_REQUESTED     (-1)
@@ -81,7 +81,7 @@ extern "C"
 
   typedef enum PERIPHERAL_TYPE
   {
-    PERIPHERAL_TYPE_UNKNOWN = 0,
+    PERIPHERAL_TYPE_UNKNOWN,
     PERIPHERAL_TYPE_JOYSTICK,
   } PERIPHERAL_TYPE;
 
@@ -118,7 +118,7 @@ extern "C"
   ///{
   typedef enum PERIPHERAL_EVENT_TYPE
   {
-    PERIPHERAL_EVENT_TYPE_NONE = 0,       /*!< @brief unknown event */
+    PERIPHERAL_EVENT_TYPE_NONE,           /*!< @brief unknown event */
     PERIPHERAL_EVENT_TYPE_DRIVER_BUTTON,  /*!< @brief state changed for joystick driver button */
     PERIPHERAL_EVENT_TYPE_DRIVER_HAT,     /*!< @brief state changed for joystick driver hat */
     PERIPHERAL_EVENT_TYPE_DRIVER_AXIS,    /*!< @brief state changed for joystick driver axis */
@@ -163,16 +163,17 @@ extern "C"
   ///{
   typedef struct JOYSTICK_INFO
   {
-    char*         provider;           /*!< @brief name of the driver or interface providing the joystick */
-    int           requested_port;     /*!< @brief requested port number (such as for 360 controllers), or NO_PORT_REQUESTED */
-    unsigned int  button_count;       /*!< @brief number of buttons reported by the driver */
-    unsigned int  hat_count;          /*!< @brief number of hats reported by the driver */
-    unsigned int  axis_count;         /*!< @brief number of axes reported by the driver */
+    PERIPHERAL_INFO peripheral;         /*!< @brief peripheral info for this joystick */
+    char*           provider;           /*!< @brief name of the driver or interface providing the joystick */
+    int             requested_port;     /*!< @brief requested port number (such as for 360 controllers), or NO_PORT_REQUESTED */
+    unsigned int    button_count;       /*!< @brief number of buttons reported by the driver */
+    unsigned int    hat_count;          /*!< @brief number of hats reported by the driver */
+    unsigned int    axis_count;         /*!< @brief number of axes reported by the driver */
   } ATTRIBUTE_PACKED JOYSTICK_INFO;
 
   typedef enum JOYSTICK_DRIVER_TYPE
   {
-    JOYSTICK_DRIVER_TYPE_UNKNOWN = 0,
+    JOYSTICK_DRIVER_TYPE_UNKNOWN,
     JOYSTICK_DRIVER_TYPE_BUTTON,
     JOYSTICK_DRIVER_TYPE_HAT_DIRECTION,
     JOYSTICK_DRIVER_TYPE_SEMIAXIS,
@@ -187,7 +188,7 @@ extern "C"
 
   typedef enum JOYSTICK_DRIVER_HAT_DIRECTION
   {
-    JOYSTICK_DRIVER_HAT_UNKNOWN = 0,
+    JOYSTICK_DRIVER_HAT_UNKNOWN,
     JOYSTICK_DRIVER_HAT_LEFT,
     JOYSTICK_DRIVER_HAT_RIGHT,
     JOYSTICK_DRIVER_HAT_UP,
@@ -233,7 +234,7 @@ extern "C"
 
   typedef struct JOYSTICK_FEATURE
   {
-    unsigned int                           id;
+    char*                                  feature_name;
     JOYSTICK_DRIVER_TYPE                   driver_type;
     union
     {

@@ -39,32 +39,20 @@ const char* CJoystickTranslator::HatDirectionToString(HatDirection dir)
   return "RELEASED";
 }
 
-JoystickFeatureType CJoystickTranslator::GetFeatureType(JoystickFeatureID featureId)
+SemiAxisDirection CJoystickTranslator::PositionToSemiAxisDirection(float position)
 {
-  switch (featureId)
-  {
-    case JoystickIDButtonA:           return JoystickDigitalButton;
-    case JoystickIDButtonB:           return JoystickDigitalButton;
-    case JoystickIDButtonX:           return JoystickDigitalButton;
-    case JoystickIDButtonY:           return JoystickDigitalButton;
-    case JoystickIDButtonStart:       return JoystickDigitalButton;
-    case JoystickIDButtonBack:        return JoystickDigitalButton;
-    case JoystickIDButtonGuide:       return JoystickDigitalButton;
-    case JoystickIDButtonLeftBumper:  return JoystickDigitalButton;
-    case JoystickIDButtonRightBumper: return JoystickDigitalButton;
-    case JoystickIDButtonLeftStick:   return JoystickDigitalButton;
-    case JoystickIDButtonRightStick:  return JoystickDigitalButton;
-    case JoystickIDButtonUp:          return JoystickDigitalButton;
-    case JoystickIDButtonRight:       return JoystickDigitalButton;
-    case JoystickIDButtonDown:        return JoystickDigitalButton;
-    case JoystickIDButtonLeft:        return JoystickDigitalButton;
-    case JoystickIDTriggerLeft:       return JoystickAnalogButton;
-    case JoystickIDTriggerRight:      return JoystickAnalogButton;
-    case JoystickIDAnalogStickLeft:   return JoystickAnalogStick;
-    case JoystickIDAnalogStickRight:  return JoystickAnalogStick;
-    case JoystickIDAccelerometer:     return JoystickAccelerometer;
-    default:
-      break;
-  }
-  return JoystickDigitalButton;
+  if      (position > 0) return SemiAxisDirectionPositive;
+  else if (position < 0) return SemiAxisDirectionNegative;
+
+  return SemiAxisDirectionUnknown;
+}
+
+CardinalDirection CJoystickTranslator::VectorToCardinalDirection(float x, float y)
+{
+  if      (y >= x && y >  -x) return DirectionUp;
+  else if (y <  x && y >= -x) return DirectionRight;
+  else if (y <= x && y <  -x) return DirectionDown;
+  else if (y >  x && y <= -x) return DirectionLeft;
+
+  return DirectionUnknown;
 }
