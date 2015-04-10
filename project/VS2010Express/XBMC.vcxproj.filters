@@ -364,6 +364,9 @@
     <Filter Include="games\windows">
       <UniqueIdentifier>{b27eff5a-49e1-4e7d-b4c2-f4e46d18629a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="games\windows\wizards">
+      <UniqueIdentifier>{63e2392e-8d91-4bc8-a014-eba86326b29a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\xbmc\win32\pch.cpp">
@@ -3140,13 +3143,7 @@
     <ClCompile Include="..\..\xbmc\input\joysticks\JoystickTranslator.cpp">
       <Filter>input\joysticks</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\xbmc\input\joysticks\generic\DefaultJoystickInputHandler.cpp">
-      <Filter>input\joysticks\generic</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\xbmc\input\joysticks\generic\DigitalAnalogButtonConverter.cpp">
-      <Filter>input\joysticks\generic</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\xbmc\input\joysticks\generic\GenericJoystickDriverHandler.cpp">
       <Filter>input\joysticks\generic</Filter>
     </ClCompile>
     <ClCompile Include="..\..\xbmc\input\joysticks\generic\GenericJoystickKeyboardHandler.cpp">
@@ -3154,9 +3151,6 @@
     </ClCompile>
     <ClCompile Include="..\..\xbmc\input\PortManager.cpp">
       <Filter>input</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\xbmc\peripherals\addons\AddonJoystickDriverHandler.cpp">
-      <Filter>peripherals\addons</Filter>
     </ClCompile>
     <ClCompile Include="..\..\xbmc\peripherals\bus\virtual\PeripheralBusApplication.cpp">
       <Filter>peripherals\bus\virtual</Filter>
@@ -3218,17 +3212,53 @@
     <ClCompile Include="..\..\xbmc\guilib\GUIFocusPlane.cpp">
       <Filter>guilib</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\xbmc\games\windows\GUIWindowGamePeripherals.cpp">
-      <Filter>games\windows</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\xbmc\games\addons\GamePeripheral.cpp">
-      <Filter>games\addons</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\xbmc\games\windows\GUIDialogControllerInput.cpp">
       <Filter>games\windows</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\xbmc\guilib\GUIGamePeripheral.cpp">
+    <ClCompile Include="..\..\xbmc\games\GameTranslator.cpp">
+      <Filter>games</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\xbmc\peripherals\addons\AddonJoystickButtonMapping.cpp">
+      <Filter>peripherals\addons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\xbmc\peripherals\addons\AddonJoystickButtonMapRO.cpp">
+      <Filter>peripherals\addons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\xbmc\peripherals\addons\AddonJoystickButtonMapWO.cpp">
+      <Filter>peripherals\addons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\xbmc\peripherals\addons\AddonJoystickInputHandling.cpp">
+      <Filter>peripherals\addons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\xbmc\games\addons\GameController.cpp">
+      <Filter>games\addons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\xbmc\games\addons\GameControllerFeature.cpp">
+      <Filter>games\addons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\xbmc\games\addons\GameControllerLayout.cpp">
+      <Filter>games\addons</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\xbmc\input\joysticks\generic\GenericJoystickButtonMapping.cpp">
+      <Filter>input\joysticks\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\xbmc\input\joysticks\generic\GenericJoystickInputHandling.cpp">
+      <Filter>input\joysticks\generic</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\xbmc\guilib\GUIGameController.cpp">
       <Filter>guilib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\xbmc\games\windows\GUIWindowGameControllers.cpp">
+      <Filter>games\windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\xbmc\filesystem\NFSDirectory.cpp">
+      <Filter>filesystem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\xbmc\games\windows\wizards\GUIControllerWizard.cpp">
+      <Filter>games\windows\wizards</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\xbmc\input\joysticks\DefaultController.cpp">
+      <Filter>input\joysticks</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -6153,13 +6183,7 @@
     <ClInclude Include="..\..\xbmc\input\joysticks\JoystickTypes.h">
       <Filter>input\joysticks</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\xbmc\input\joysticks\generic\DefaultJoystickInputHandler.h">
-      <Filter>input\joysticks\generic</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\xbmc\input\joysticks\generic\DigitalAnalogButtonConverter.h">
-      <Filter>input\joysticks\generic</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\xbmc\input\joysticks\generic\GenericJoystickDriverHandler.h">
       <Filter>input\joysticks\generic</Filter>
     </ClInclude>
     <ClInclude Include="..\..\xbmc\input\joysticks\generic\GenericJoystickKeyboardHandler.h">
@@ -6167,9 +6191,6 @@
     </ClInclude>
     <ClInclude Include="..\..\xbmc\input\PortManager.h">
       <Filter>input</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\xbmc\peripherals\addons\AddonJoystickDriverHandler.h">
-      <Filter>peripherals\addons</Filter>
     </ClInclude>
     <ClInclude Include="..\..\xbmc\peripherals\bus\virtual\PeripheralBusApplication.h">
       <Filter>peripherals\bus\virtual</Filter>
@@ -6234,20 +6255,62 @@
     <ClInclude Include="..\..\xbmc\guilib\GUIFocusPlane.h">
       <Filter>guilib</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\xbmc\games\windows\GUIWindowGamePeripherals.h">
-      <Filter>games\windows</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\xbmc\games\GameTypes.h">
       <Filter>games</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\xbmc\games\addons\GamePeripheral.h">
-      <Filter>games\addons</Filter>
     </ClInclude>
     <ClInclude Include="..\..\xbmc\games\windows\GUIDialogControllerInput.h">
       <Filter>games\windows</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\xbmc\guilib\GUIGamePeripheral.h">
+    <ClInclude Include="..\..\xbmc\games\GameDefinitions.h">
+      <Filter>games</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\xbmc\games\GameTranslator.h">
+      <Filter>games</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\xbmc\peripherals\addons\AddonJoystickButtonMapping.h">
+      <Filter>peripherals\addons</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\xbmc\peripherals\addons\AddonJoystickButtonMapRO.h">
+      <Filter>peripherals\addons</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\xbmc\peripherals\addons\AddonJoystickButtonMapWO.h">
+      <Filter>peripherals\addons</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\xbmc\peripherals\addons\AddonJoystickInputHandling.h">
+      <Filter>peripherals\addons</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\xbmc\games\addons\GameControllerLayout.h">
+      <Filter>games\addons</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\xbmc\games\addons\GameController.h">
+      <Filter>games\addons</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\xbmc\games\addons\GameControllerFeature.h">
+      <Filter>games\addons</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\xbmc\input\joysticks\generic\GenericJoystickInputHandling.h">
+      <Filter>input\joysticks\generic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\xbmc\input\joysticks\generic\GenericJoystickButtonMapping.h">
+      <Filter>input\joysticks\generic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\xbmc\guilib\GUIGameController.h">
       <Filter>guilib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\xbmc\games\windows\GUIWindowGameControllers.h">
+      <Filter>games\windows</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\xbmc\input\joysticks\IJoystickButtonMapper.h">
+      <Filter>input\joysticks</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\xbmc\games\windows\wizards\GUIControllerWizard.h">
+      <Filter>games\windows\wizards</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\xbmc\games\windows\wizards\IGUIControllerWizard.h">
+      <Filter>games\windows\wizards</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\xbmc\input\joysticks\DefaultController.h">
+      <Filter>input\joysticks</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
